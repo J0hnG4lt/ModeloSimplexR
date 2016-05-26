@@ -1,4 +1,6 @@
 library(boot) # Contiene el método simplex
+library(linprog) # Contiene el método solveLP (usada en la última pregunta)
+library(graphics) # Contiene el método plot
 
 # Autor: Georvic Tur
 # Carnet: 12-11402
@@ -7,8 +9,9 @@ library(boot) # Contiene el método simplex
 
 #Modelo Forma Normal Estándar
 b <- c(950000, 600000, 300000, 230000)
-Ae <- cbind(c(0.45, 0.18, 0.3, 0.03), c(0.38, 0.22, 0.3, 0.07), c(0.35, 0.26, 0.2, 0.13), c(-1,0,0,0), c(0, -1, 0, 0), c(0, 0, -1, 0), c(0, 0, 0, -1))
+Ae <- cbind(c(0.45, 0.18, 0.3, 0.03), c(0.38, 0.22, 0.3, 0.07), c(0.35, 0.26, 0.2, 0.14), c(-1,0,0,0), c(0, -1, 0, 0), c(0, 0, -1, 0), c(0, 0, 0, -1))
 coe <- c(35, 31, 29, 0, 0, 0, 0)
+
 
 # Solución óptima
 x <- simplex(a=coe,A3=Ae, b3=b, maxi=FALSE)
@@ -17,7 +20,7 @@ x1 = x[["soln"]]['x1']
 x2 = x[["soln"]]['x2']
 x3 = x[["soln"]]['x3']
 
-sprintf("La solución óptima al modelo planteado es:\n")
+sprintf("La solución óptima al modelo planteado es: %s ($)", x[["value"]])
 sprintf("Barriles de Crudo Ligero: %s", x1)
 sprintf("Barriles de Crudo Mediano: %s", x2)
 sprintf("Barriles de Crudo Pesado: %s", x3)
@@ -40,7 +43,7 @@ sprintf("Barriles de Bitumen: %s", y4)
 # Sensibilidad del Problema
 
 #Planteamiento del Problema dual
-Aed <- rbind(c(0.45, 0.18, 0.3, 0.03), c(0.38, 0.22, 0.3, 0.07), c(0.35, 0.26, 0.2, 0.13), c(-1,0,0,0), c(0, -1, 0, 0), c(0, 0, -1, 0), c(0, 0, 0, -1))
+Aed <- rbind(c(0.45, 0.18, 0.3, 0.03), c(0.38, 0.22, 0.3, 0.07), c(0.35, 0.26, 0.2, 0.14), c(-1,0,0,0), c(0, -1, 0, 0), c(0, 0, -1, 0), c(0, 0, 0, -1))
 Aed
 coed <- (10^4)*c(95, 60, 30, 23)
 bd <- c(35, 31, 29, 0, 0, 0, 0)
@@ -80,7 +83,7 @@ while(i<=1200000){
   }
   i <- i+1
 }
-sprintf("La cota superior es: %s", i) #Cota superior 1050000
+sprintf("La cota superior es: %s", i) #Cota superior 1050001
  
 sprintf("Calculando mínimo valor posible de la gasolina.")
 j <- 950000
@@ -97,18 +100,20 @@ sprintf("La cota inferior es: %s", j) #cota inferior 807692
 
 sprintf("Calculando costo mínimo en función de la cantidad de gasolina entregada")
 costo = NULL
+dom = NULL
 n<-1
-k <- 807692 # Se usa el rango obtenido arriba, pues es el intervalo factible
-while(k<1050000){
-  b_new <- c(k, 600000, 300000, 230000)
-  x_solu <- B_2_I %*% (b_new)
-  costo[n] <- 35*x_solu[3] + 29*x_solu[4] # De las variables básicas, x1 y x3 están en la base.
-  k <- k+1                                # Están en x_solu[3] y x_solu[4] respectivamente
+k <- 400000 # Se usa el rango obtenido arriba, pues es el intervalo factible
+while(k<1200000){
+  xxx = solveLP(cvec=coe2, bvec=c(k, 600000, 300000, 230000), Amat=Ae2, maximum=FALSE, const.dir=c(">=",">=",">=",">="),solve.dual=TRUE,verbose=1)
+  costo[n] = xxx[["opt"]]
+  dom[n] = k
+  k <- k+1000                                
   n <- n+1
 }
 
 
 sprintf("Graficando Costo Mínimo versus Barriles de Gasolina Producidos")
+plot(x=dom, costo, type="l",xlab='Número de barriles de gasolina', ylab='Costo de producción mínimo', main='Variación de costo según cantidad de gasolina')
 
-library(graphics)
-plot(x=807692:(1050000-1), costo, xlab='barriles de gasolina', ylab='costo de producción total', main='Costo/BarrilG')
+
+
