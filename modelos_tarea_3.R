@@ -5,6 +5,8 @@ library(boot)
 # Correo: alexanderstower@gmail.com
 
 
+#Primera Parte
+
 M <- matrix(nrow=12, ncol=72)
 
 i=1
@@ -92,3 +94,33 @@ costos = c(c(0,5,0,0,0,5,7,0,0,0,0,7),
 	   
 	   
 RES <- simplex(a=costos,A3=M, b3=b, maxi=FALSE)
+
+# Segunda Parte
+
+costos2 = NULL
+i=1
+while(i<=72){
+  costos2[i] <- 0
+  if (costos[i] > 0){
+    costos2[i] <- 3
+  }
+  i = i+1
+}
+
+RES2 <- simplex(a=costos2,A3=M, b3=b, maxi=FALSE)
+
+
+
+# Tercera Parte
+
+#Carnet: 12-11402
+oferta2 <- c(1,2,1,1,4,0)
+demanda2 <- rep(sum(oferta2)/length(oferta2), length(oferta2))
+
+b2 <- c(oferta2, demanda2)
+
+RES3 <- simplex(a=costos,A3=M, b3=b2, maxi=FALSE)
+
+
+# Cuarta Parte
+
