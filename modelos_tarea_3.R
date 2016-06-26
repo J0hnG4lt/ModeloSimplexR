@@ -1,4 +1,5 @@
 library(boot)
+library(lpSolve)
 
 # Autor: Georvic Tur
 # Carnet: 12-11402
@@ -7,77 +8,57 @@ library(boot)
 
 #Primera Parte
 
-M <- matrix(nrow=12, ncol=72)
+M <- matrix(0 ,nrow=12, ncol=24)
 
-i=1
-while(i <= 6){
-  n <- 1
-  while(n <= 72){
-    M[i,n] <- 0
-    n <- n+1
-  }
-  i <- i+1
-}
+M[1,1]=1
+M[1,2]=1
+M[1,3]=1
+M[1,4]=1
+M[1,5]=-1
+M[1,21]=-1
+M[2,1]=-1
+M[2,5]=1
+M[2,6]=1
+M[2,7]=1
+M[2,8]=1
+M[2,9]=-1
+M[3,6]=-1
+M[3,9]=1
+M[3,10]=1
+M[3,11]=1
+M[3,12]=1
+M[3,13]=-1
+M[4,10]=-1
+M[4,13]=1
+M[4,14]=1
+M[4,15]=1
+M[4,16]=1
+M[4,17]=-1
+M[5,14]=-1
+M[5,17]=1
+M[5,18]=1
+M[5,19]=1
+M[5,20]=1
+M[5,22]=-1
+M[6,2]=-1
+M[6,18]=-1
+M[6,21]=1
+M[6,22]=1
+M[6,23]=1
+M[6,24]=1
+M[7,3]=1
+M[7,7]=1
+M[8,8]=1
+M[8,11]=1
+M[9,12]=1
+M[9,15]=1
+M[10,16]=1
+M[10,19]=1
+M[11,20]=1
+M[11,23]=1
+M[12,4]=1
+M[12,24]=1
 
-M[1,2] <- 1
-M[1,6] <- 1
-M[1,7] <- 1
-M[1,12] <- 1
-M[1,13] <- -1
-M[1,61] <- -1
-
-M[2,2] <- -1
-M[2,13] <- 1
-M[2,15] <- 1
-M[2,19] <- 1
-M[2,20] <- 1
-M[2,12*2+2] <- -1
-
-M[3,12+3] <- -1
-M[3,12*2+2] <- 1
-M[3,12*2+4] <- 1
-M[3,12*2+8] <- 1
-M[3,12*2+9] <- 1
-M[3,12*3+3] <- -1
-
-M[4,12*2+4] <- -1
-M[4,12*3+3] <- 1
-M[4,12*3+5] <- 1
-M[4,12*3+9] <- 1
-M[4,12*3+10] <- 1
-M[4,12*4+4] <- -1
-
-M[5,12*3+5] <- -1
-M[5,12*4+4] <- 1
-M[5,12*4+6] <- 1
-M[5,12*4+10] <- 1
-M[5,12*4+11] <- 1
-M[5,12*5+5] <- -1
-
-M[6,12*4+6] <- -1
-M[6,12*5+1] <- 1
-M[6,12*5+5] <- 1
-M[6,12*5+11] <- 1
-M[6,12*5+12] <- 1
-M[6,6] <- -1
-
-
-i=1
-while(i <= 6){
-  k <- i+6
-  j <- i+6+12
-  n <- 1
-  while(n <= 72){
-    M[i+6,n] <- 0
-    if ((n == k) || (n == j)){
-      M[i+6,n] <- 1
-    }
-    n <- n+1
-  }
-  k <- k + 12
-  j <- j + 12
-  i <- i+1
-}
 
 
 oferta <- c(0,5,10,15,20,25)
@@ -85,30 +66,38 @@ demanda <- rep(sum(oferta)/length(oferta), length(oferta))
 
 b <- c(oferta, demanda)
 
-costos = c(c(0,5,0,0,0,5,7,0,0,0,0,7),
-	   c(5,0,5,0,0,0,1,1,0,0,0,0),
-	   c(0,5,0,5,0,0,0,7,7,0,0,0),
-	   c(0,0,5,0,5,0,0,0,1,1,0,0),
-	   c(0,0,0,5,0,5,0,0,0,7,7,0),
-	   c(5,0,0,0,5,0,0,0,0,0,1,1))
-	   
-	   
-RES <- simplex(a=costos,A3=M, b3=b, maxi=FALSE)
+costos = c(5,5,7,7,5,5,1,1,5,5,7,7,5,5,1,1,5,5,7,7,5,5,1,1)
 
+dirs <- rep("=",12)
+
+
+
+RES <- lp("min",costos,M,dirs,b)
+
+RES[["solution"]]
+
+
+AAA<-matrix(RES[["solution"]], nrow=6,ncol=4,byrow=TRUE)
+
+write.table(AAA, file = "pregunta1.csv", append = FALSE, quote = TRUE, sep = ",",
+            eol = "\n", na = "NA", dec = ".", row.names = TRUE,
+            col.names = TRUE, qmethod = c("escape", "double"),
+            fileEncoding = "")
+
+
+            
 # Segunda Parte
 
-costos2 = NULL
-i=1
-while(i<=72){
-  costos2[i] <- 0
-  if (costos[i] > 0){
-    costos2[i] <- 3
-  }
-  i = i+1
-}
+costos2 = rep(3,24)
 
-RES2 <- simplex(a=costos2,A3=M, b3=b, maxi=FALSE)
+RES2 <- lp("min",costos2,M,dirs,b)
 
+BBB<-matrix(RES2[["solution"]], nrow=6,ncol=4,byrow=TRUE)
+
+write.table(BBB, file = "pregunta2.csv", append = FALSE, quote = TRUE, sep = ",",
+            eol = "\n", na = "NA", dec = ".", row.names = TRUE,
+            col.names = TRUE, qmethod = c("escape", "double"),
+            fileEncoding = "")
 
 
 # Tercera Parte
@@ -119,8 +108,14 @@ demanda2 <- rep(sum(oferta2)/length(oferta2), length(oferta2))
 
 b2 <- c(oferta2, demanda2)
 
-RES3 <- simplex(a=costos,A3=M, b3=b2, maxi=FALSE)
+RES3 <- lp("min",costos,M,dirs,b2)
 
+CCC<-matrix(RES3[["solution"]], nrow=6,ncol=4,byrow=TRUE)
+
+write.table(CCC, file = "pregunta3.csv", append = FALSE, quote = TRUE, sep = ",",
+            eol = "\n", na = "NA", dec = ".", row.names = TRUE,
+            col.names = TRUE, qmethod = c("escape", "double"),
+            fileEncoding = "")
 
 # Cuarta Parte
 
